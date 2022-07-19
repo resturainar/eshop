@@ -3,7 +3,7 @@ const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 
 //
-const authentication = require('./api/Authentication');
+const authentication = require('./api/authentication');
 const Database = require('./conf/Database');
 const AuthenticationService = require('./services/mysql/AuthenticationService');
 const AuthenticationValidator = require('./validator/authentication');
