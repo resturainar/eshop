@@ -1,46 +1,43 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 
-//authentication
-const authentication = require('./api/authentication');
+//
+const authentication = require('./api/Authentication');
 const Database = require('./conf/Database');
 const AuthenticationService = require('./services/mysql/AuthenticationService');
 const AuthenticationValidator = require('./validator/authentication');
 
+//products
+const products = require('./api/products');
+const ProductsService = require('./services/mysql/ProductsService');
+const ProductsValidator = require('./validator/products');
+const ClientError = require('./exceptions/ClientError');
+
 const init = async () => {
   const database = new Database();
-  const authenticationServive = new AuthenticationService(database);
+  const authenticationService = new AuthenticationService(database);
+  const productsService = new ProductsService(database);
 
-    const server = Hapi.server({
-      host: process.env.HOST,
-      port: process.env.PORT,
-      routes: {
-        cors: {
-          origin: ['*'],
-        },
+  const server = Hapi.server({
+    host: process.env.HOST,
+    port: process.env.PORT,
+    routes: {
+      cors: {
+        origin: ['*'],
       },
-    });
+    },
+  });
 
-    server.route({
-        method: 'GET',
-        path: '/',
-        handler: () => ({
-          name: 'Restu Raina Rahmah',
-        }),
-      });
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      name: 'Restu Raina Rahmah',
+    }),
+  });
 
-      //defines internal plugins
-      await server.register([
-        {
-          plugin: authentication,
-          option:{
-            service: AuthenticationService,
-            validation: AuthenticationValidator,
-          },
-        },
-      ]);
-
-    // extension
+  // extension
   server.ext('onPreResponse', (request, h) => {
     const {response} = request;
 
@@ -57,10 +54,51 @@ const init = async () => {
 
     return h.continue;
   });
-    
-    await server.start();
-    console.log(`Server running at ${server.info.uri}`);
+  
+//register external plugin
+await server.register([
+  {
+    plugin: Jwt,
+  },
+]);
 
-  };
+// defines authentication strategy
+server.auth.strategy('eshop_jwt', 'jwt',{
+  keys: process.env.TOKEN_KEY,
+  verify: {
+    aud: false,
+    iss: false,
+    sub: false,
+  },
+  validate: (artifacts) => ({
+    isValid: true,
+    credentials: {
+      id: artifacts.decoded.payload.id,
+    },
+  }),
+});
 
-  init();
+//defines internal plugin
+  await server.register([
+    {
+      plugin: authentication,
+      options: {
+        service: authenticationService,
+        validator: AuthenticationValidator,
+        
+      },
+    },
+    {
+      plugin: products,
+      options: {
+        service: productsService,
+        validator: ProductsValidator,
+      }
+    },
+  ]);
+
+  await server.start();
+  console.log(`Server running at ${server.info.uri}`);
+};
+
+init();
