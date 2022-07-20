@@ -1,5 +1,5 @@
 const InvariantError = require('../../exceptions/InvariantError');
-const { ProductsPayloadSchema, ProductImageHeaderSchema } = require('./schema');
+const { ProductsPayloadSchema, ProductsImageHeaderSchema } = require('./schema');
 
 const ProductsValidator = {
   validateProductsPayload: (payload) => {
@@ -9,7 +9,7 @@ const ProductsValidator = {
     }
   },
   validateProductImageHeader: (header) => {
-    const validationResult = ProductImageHeaderSchema.validate(header);
+    const validationResult = ProductsImageHeaderSchema.validate(header);
     if (validationResult.error) {
       throw new InvariantError(validationResult.error.message);
     }

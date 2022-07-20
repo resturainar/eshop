@@ -1,3 +1,4 @@
+const { nanoid } = require("nanoid");
 
 class ProductsHandler {
     #productsService;
@@ -14,6 +15,8 @@ class ProductsHandler {
       this.getProductById = this.getProductById.bind(this);
       this.putProductById = this.putProductById.bind(this);
       this.deleteProductById = this.deleteProductById.bind(this);
+      this.putProductImageById = this.putProductImageById.bind(this);
+      
     }
   
     async postProduct(request, h) {
